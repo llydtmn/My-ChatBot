@@ -1,9 +1,29 @@
 import { useEffect, useRef, useState } from "react";
 import { SUGGESTIONS } from "../data/mockData";
+import { loadSuggestions, subscribeToSuggestions } from "../services/suggestionService";
 
 export default function SuggestionBar({ visible, onSelect }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [questions, setQuestions] = useState(SUGGESTIONS);
   const dropdownRef = useRef(null);
+
+  // Load from Supabase and stay in sync when the admin edits the list.
+  useEffect(() => {
+    let alive = true;
+    const refresh = () =>
+      loadSuggestions().then((list) => alive && setQuestions(list));
+    refresh();
+    const unsubscribe = subscribeToSuggestions(refresh);
+    // Also refresh when the dropdown is shown again (covers missed realtime events).
+    return () => {
+      alive = false;
+      unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (visible) loadSuggestions().then(setQuestions);
+  }, [visible]);
 
   useEffect(() => {
     if (!visible) setIsOpen(false);
@@ -29,7 +49,7 @@ export default function SuggestionBar({ visible, onSelect }) {
     };
   }, []);
 
-  if (!visible) return null;
+  if (!visible || !questions.length) return null;
 
   const handleSelect = (question) => {
     setIsOpen(false);
@@ -56,7 +76,7 @@ export default function SuggestionBar({ visible, onSelect }) {
           role="group"
           aria-label="Suggested questions"
         >
-          {SUGGESTIONS.map((question) => (
+          {questions.map((question) => (
             <button
               key={question}
               type="button"

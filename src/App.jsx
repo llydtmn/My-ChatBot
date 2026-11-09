@@ -11,6 +11,7 @@ export default function App() {
   const [introHidden, setIntroHidden] = useState(false);
   const [chatVisible, setChatVisible] = useState(false);
   const [showAdmin, setShowAdmin] = useState(isAdminHash);
+  const [resetSignal, setResetSignal] = useState(0);
   const timer = useRef(null);
 
   // Count this device once per browser session.
@@ -38,7 +39,11 @@ export default function App() {
 
   const goBack = () => {
     setChatVisible(false);
-    later(() => setIntroHidden(false), 300);
+    // Once the chat has faded out, show the intro and start the next chat fresh.
+    later(() => {
+      setIntroHidden(false);
+      setResetSignal((n) => n + 1);
+    }, 300);
   };
 
   if (showAdmin) return <AdminPage />;
@@ -47,7 +52,7 @@ export default function App() {
     <>
       <BackgroundEffects />
       <IntroPage hidden={introHidden} onEnter={enterChat} />
-      <ChatPage visible={chatVisible} onBack={goBack} />
+      <ChatPage visible={chatVisible} onBack={goBack} resetSignal={resetSignal} />
     </>
   );
 }

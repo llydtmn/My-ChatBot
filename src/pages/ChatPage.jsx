@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import ChatHeader from "../components/ChatHeader";
 import MessageList from "../components/MessageList";
 import SuggestionBar from "../components/SuggestionBar";
@@ -5,7 +6,7 @@ import ChatInput from "../components/ChatInput";
 import useChat from "../hooks/useChat";
 import useMusic from "../hooks/useMusic";
 
-export default function ChatPage({ visible, onBack }) {
+export default function ChatPage({ visible, onBack, resetSignal = 0 }) {
   const music = useMusic();
 
   const {
@@ -15,9 +16,20 @@ export default function ChatPage({ visible, onBack }) {
     showSuggestions,
     sendMessage,
     storageError,
+    reset,
   } = useChat({
     playSong: music.loadSong,
   });
+
+  // Clear the conversation (and stop any song) each time the user returns to the intro.
+  const lastReset = useRef(resetSignal);
+  useEffect(() => {
+    if (resetSignal === lastReset.current) return;
+    lastReset.current = resetSignal;
+    reset();
+    music.stop();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resetSignal]);
 
   return (
     <div id="chat-screen" className={visible ? "visible" : ""}>

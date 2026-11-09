@@ -12,6 +12,11 @@ export default function useMusic() {
     if (autoplay) audio.play().catch(() => {});
   };
 
+  const stop = () => {
+    audio.pause();
+    audio.currentTime = 0;
+  };
+
   const toggle = () => {
     if (audio.paused) audio.play().catch(() => {});
     else audio.pause();
@@ -33,5 +38,5 @@ export default function useMusic() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [audio]);
 
-  return { isPlaying, loadSong, toggle };
+  return { isPlaying, loadSong, toggle, stop };
 }

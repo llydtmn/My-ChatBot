@@ -4,8 +4,6 @@ import { requestBotReply } from "../services/chatService";
 import { addExtraInfo } from "../services/extraInfoService";
 import {
   createConversation,
-  getLatestConversation,
-  getConversationMessages,
   saveChatMessage,
   updateConversationTitle,
 } from "../services/chatHistoryService";
@@ -28,7 +26,8 @@ export default function useChat({ playSong }) {
   const loadingRef = useRef(false);
   const historyRef = useRef([]);
   const devRef = useRef({ awaitingCode: false, awaitingInfo: false });
-  const conversationIdRef = useRef(null);
+  const conversationRef = useRef(null); // Promise<conversation id> | null
+  const generationRef = useRef(0); // bumps on reset so late replies are dropped
   const idRef = useRef(1);
   const mountedRef = useRef(true);
 
@@ -37,10 +36,24 @@ export default function useChat({ playSong }) {
     if (mountedRef.current) setIsLoading(value);
   }, []);
 
+  // Every fresh chat (page load or after returning to the intro) gets its own
+  // conversation row, created on the first message so empty chats aren't stored.
+  const ensureConversation = useCallback(() => {
+    if (!conversationRef.current) {
+      conversationRef.current = createConversation()
+        .then((conversation) => conversation.id)
+        .catch((error) => {
+          conversationRef.current = null;
+          throw error;
+        });
+    }
+    return conversationRef.current;
+  }, []);
+
   const persistMessage = useCallback(async (message) => {
-    if (!conversationIdRef.current) return;
     try {
-      const saved = await saveChatMessage(conversationIdRef.current, message);
+      const conversationId = await ensureConversation();
+      const saved = await saveChatMessage(conversationId, message);
       return saved;
     } catch (error) {
       console.error("Could not save chat message:", error);
@@ -48,7 +61,7 @@ export default function useChat({ playSong }) {
         setStorageError(`Message could not be saved: ${error.message}`);
       }
     }
-  }, []);
+  }, [ensureConversation]);
 
   const addMessage = useCallback((message) => {
     const normalized = {
@@ -80,46 +93,28 @@ export default function useChat({ playSong }) {
     return message;
   }, [persistMessage]);
 
-  // Restore the latest conversation or create one for this anonymous/authenticated user.
+  // Each page load starts a fresh chat; nothing is restored from before.
   useEffect(() => {
     mountedRef.current = true;
-
-    const initialize = async () => {
-      try {
-        let conversation = await getLatestConversation();
-        if (!conversation) conversation = await createConversation();
-
-        conversationIdRef.current = conversation.id;
-        const savedMessages = await getConversationMessages(conversation.id);
-
-        if (!mountedRef.current) return;
-
-        if (savedMessages.length) {
-          setMessages(savedMessages);
-          idRef.current = savedMessages.length + 1;
-          historyRef.current = savedMessages
-            .filter((item) => item.type === "text" && item.text)
-            .map((item) => ({
-              role: item.role === "bot" ? "assistant" : "user",
-              content: item.text,
-            }));
-          setShowSuggestions(false);
-        }
-      } catch (error) {
-        console.error("Chat initialization failed:", error);
-        if (mountedRef.current) {
-          setStorageError(error.message || "Could not connect to Supabase.");
-        }
-      } finally {
-        if (mountedRef.current) setIsReady(true);
-      }
-    };
-
-    initialize();
-
+    setIsReady(true);
     return () => {
       mountedRef.current = false;
     };
+  }, []);
+
+  // Back to the intro screen: wipe the on-screen chat and start a new conversation.
+  const reset = useCallback(() => {
+    generationRef.current += 1;
+    conversationRef.current = null;
+    historyRef.current = [];
+    devRef.current = { awaitingCode: false, awaitingInfo: false };
+    idRef.current = 1;
+    loadingRef.current = false;
+    setMessages([{ id: 0, role: "bot", type: "text", text: WELCOME_MESSAGE }]);
+    setIsTyping(false);
+    setIsLoading(false);
+    setShowSuggestions(true);
+    setStorageError("");
   }, []);
 
   const addMusicPlayer = (songIndex) => {
@@ -141,8 +136,10 @@ export default function useChat({ playSong }) {
 
     setLoading(true);
     addUserMessage(message);
+    const generation = generationRef.current;
 
     window.setTimeout(() => {
+      if (generation !== generationRef.current) return;
       addMessage({ text: "Sure! Here's a photo of John Lloyd 📷" });
       addMessage({
         type: "image",
@@ -218,20 +215,23 @@ export default function useChat({ playSong }) {
   };
 
   const fetchReply = async (message) => {
+    const generation = generationRef.current;
     try {
       historyRef.current.push({ role: "user", content: message });
       const reply = await requestBotReply(historyRef.current);
+      if (generation !== generationRef.current) return; // chat was reset meanwhile
       historyRef.current.push({ role: "assistant", content: reply });
       setIsTyping(false);
       addMessage({ text: reply });
     } catch (error) {
+      if (generation !== generationRef.current) return;
       setIsTyping(false);
       addMessage({
         text: `⚠ ${error.message || "Something went wrong. Please try again."}`,
         isError: true,
       });
     } finally {
-      setLoading(false);
+      if (generation === generationRef.current) setLoading(false);
     }
   };
 
@@ -249,10 +249,12 @@ export default function useChat({ playSong }) {
     addUserMessage(message);
 
     // Give the first conversation a useful title.
-    if (historyRef.current.length === 0 && conversationIdRef.current) {
-      void updateConversationTitle(conversationIdRef.current, message).catch(
-        (error) => console.error("Could not update conversation title:", error)
-      );
+    if (historyRef.current.length === 0) {
+      void ensureConversation()
+        .then((id) => updateConversationTitle(id, message))
+        .catch((error) =>
+          console.error("Could not update conversation title:", error)
+        );
     }
 
     handleMusicRequest(message);
@@ -269,5 +271,6 @@ export default function useChat({ playSong }) {
     storageError,
     showSuggestions,
     sendMessage,
+    reset,
   };
 }
