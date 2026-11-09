@@ -1,48 +1,48 @@
-import { getCurrentUser, supabase } from "./supabaseClient";
+import { supabase } from "./supabaseClient";
+import { addInfo } from "./adminService";
 
-function ensureSupabase() {
-  if (!supabase) {
-    throw new Error("Supabase is not configured. Check your .env file.");
-  }
+const LABELS = { link: "Link", photo: "Photo", video: "Video", music: "Music", file: "File" };
+
+// One line per entry, e.g.  Photo: "Graduation day" | Me in my toga | URL: https://...
+function formatEntry(row) {
+  if (!row.kind || row.kind === "text") return row.content;
+  const parts = [`${LABELS[row.kind] || "Item"}: "${row.title || "Untitled"}"`];
+  if (row.content) parts.push(row.content);
+  if (row.url) parts.push(`URL: ${row.url}`);
+  return parts.join(" | ");
 }
 
 /**
- * Loads developer-provided information belonging to the current user.
+ * Loads what you saved in the admin dashboard. It is public-read, so every
+ * visitor's chat gets it. If anything fails, chat still works without it.
  * Returns an array of strings to preserve the existing chatService contract.
  */
 export async function loadExtraInfo() {
-  ensureSupabase();
-  await getCurrentUser();
+  if (!supabase) return [];
 
-  const { data, error } = await supabase
-    .from("developer_info")
-    .select("id, content, created_at")
+  let { data, error } = await supabase
+    .from("owner_info")
+    .select("kind, title, url, content")
     .order("created_at", { ascending: true });
 
-  if (error) throw error;
-  return (data ?? []).map((item) => item.content);
-}
-
-export async function addExtraInfo(content) {
-  ensureSupabase();
-  const user = await getCurrentUser();
-  const cleanContent = String(content ?? "").trim();
-
-  if (!cleanContent) {
-    throw new Error("Please enter information before saving.");
+  if (error) {
+    // Older table without the media columns: fall back to plain text entries.
+    ({ data, error } = await supabase
+      .from("owner_info")
+      .select("content")
+      .order("created_at", { ascending: true }));
   }
 
-  const { data, error } = await supabase
-    .from("developer_info")
-    .insert({
-      user_id: user.id,
-      content: cleanContent,
-    })
-    .select("id, content, created_at")
-    .single();
+  if (error) {
+    console.warn("Could not load owner info:", error.message);
+    return [];
+  }
+  return (data ?? []).map(formatEntry).filter(Boolean);
+}
 
-  if (error) throw error;
-  return data;
+// Kept so existing imports keep working. Only the admin account can save.
+export async function addExtraInfo(content) {
+  return addInfo({ kind: "text", description: content });
 }
 
 export async function getExtraInfoBlock() {
@@ -50,7 +50,10 @@ export async function getExtraInfoBlock() {
   if (!items.length) return "";
 
   return (
-    "\n\n=== ADDITIONAL INFO (added by developer) ===\n" +
+    "\n\n=== ADDITIONAL INFO (added by John Lloyd) ===\n" +
+    "Entries labeled Link, Photo, Video, Music or File have a URL. When a visitor asks to see, " +
+    "hear or open one, put its exact URL on its own line. Copy URLs exactly. " +
+    "Never invent, shorten or change a URL.\n" +
     items.map((value, index) => `${index + 1}. ${value}`).join("\n") +
     "\n=== END ADDITIONAL INFO ==="
   );
