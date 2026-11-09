@@ -90,3 +90,15 @@
 audio.admin-preview { width: 100%; border: 0; }
 .admin-link { color: var(--text-mid); font-size: 12px; word-break: break-all; }
 .admin-link:hover { color: var(--text); }
+
+/* Mobile: 16px inputs stop iOS from zooming on focus; larger tap targets. */
+@media (max-width: 600px) {
+  .admin-page { padding: 1.5rem 0.75rem 3rem; }
+  .admin-page input,
+  .admin-page textarea { font-size: 16px; }
+  .admin-btn { min-height: 40px; padding: 8px 16px; }
+  .admin-tab { min-height: 38px; padding: 8px 14px; }
+  .admin-header .admin-actions { width: 100%; }
+  .admin-header .admin-actions .admin-btn { flex: 1; }
+  .admin-login { margin-top: 6vh; }
+}
