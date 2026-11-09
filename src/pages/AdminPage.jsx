@@ -9,6 +9,7 @@ import {
   signOutAdmin,
   updateInfo,
 } from "../services/adminService";
+import DevicesPanel from "../components/DevicesPanel";
 import "../styles/admin.css";
 
 const MAX_LENGTH = 2000;
@@ -90,6 +91,7 @@ function Dashboard({ session, error, setError }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState("");
+  const [view, setView] = useState("info");
 
   // Add form
   const [kind, setKind] = useState("text");
@@ -196,6 +198,26 @@ function Dashboard({ session, error, setError }) {
           <button className="admin-btn" onClick={() => signOutAdmin()}>Sign out</button>
         </div>
       </header>
+
+      <div className="admin-tabs" role="tablist" aria-label="Dashboard section">
+        {[["info", "Bot info"], ["devices", "Devices"]].map(([id, label]) => (
+          <button
+            key={id}
+            type="button"
+            role="tab"
+            aria-selected={view === id}
+            className={`admin-tab${view === id ? " active" : ""}`}
+            onClick={() => setView(id)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {view === "devices" ? (
+        <DevicesPanel />
+      ) : (
+        <>
 
       <form className="admin-card" onSubmit={handleAdd}>
         <div className="admin-tabs" role="tablist" aria-label="Entry type">
@@ -345,6 +367,8 @@ function Dashboard({ session, error, setError }) {
           })}
         </ul>
       </section>
+        </>
+      )}
     </>
   );
 }

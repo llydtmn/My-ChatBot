@@ -102,3 +102,10 @@ audio.admin-preview { width: 100%; border: 0; }
   .admin-header .admin-actions .admin-btn { flex: 1; }
   .admin-login { margin-top: 6vh; }
 }
+
+/* Device management */
+.admin-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.admin-stat { background: var(--surface); border: 1px solid var(--border); border-radius: 2px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
+.admin-stat strong { font-family: 'DM Serif Display', serif; font-weight: 400; font-size: 1.9rem; line-height: 1; }
+.admin-stat span { color: var(--text-dim); font-size: 11px; }
+@media (min-width: 600px) { .admin-stats { grid-template-columns: repeat(4, 1fr); } }

@@ -3,6 +3,7 @@ import BackgroundEffects from "./components/BackgroundEffects";
 import IntroPage from "./pages/IntroPage";
 import ChatPage from "./pages/ChatPage";
 import AdminPage from "./pages/AdminPage";
+import { trackVisit } from "./services/deviceService";
 
 const isAdminHash = () => window.location.hash === "#/admin";
 
@@ -11,6 +12,11 @@ export default function App() {
   const [chatVisible, setChatVisible] = useState(false);
   const [showAdmin, setShowAdmin] = useState(isAdminHash);
   const timer = useRef(null);
+
+  // Count this device once per browser session.
+  useEffect(() => {
+    trackVisit();
+  }, []);
 
   // The dashboard lives at /#/admin (works on Vercel with no extra config).
   useEffect(() => {
