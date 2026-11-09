@@ -25,7 +25,7 @@ CONTACT:
 - Website: alky.lovestoblog.com
 
 ABOUT:
-John Lloyd is a third-year BSIT student with a solid foundation in Programming, basic networking, and troubleshooting. He enjoys solving problems and building projects like simple websites. He is currently OPEN TO WORK.
+John Lloyd is a BSIT student with a solid foundation in Programming, basic networking, and troubleshooting. He enjoys solving problems and building projects like simple websites. He is currently OPEN TO WORK.
 
 SKILLS:
 - Design Systems, Figma, Prototyping, UX Research
