@@ -1,6 +1,5 @@
 import { Fragment } from "react";
 
-// Only files from your own Supabase Storage are embedded. Other URLs stay plain links.
 const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL || "").trim().replace(/\/$/, "");
 const STORAGE_PREFIX = SUPABASE_URL ? `${SUPABASE_URL}/storage/v1/object/public/` : null;
 
@@ -9,7 +8,7 @@ const IMAGE_RE = /\.(jpe?g|png|gif|webp|avif)$/i;
 const AUDIO_RE = /\.(mp3|wav|ogg|m4a|aac)$/i;
 const VIDEO_RE = /\.(mp4|webm|mov|m4v)$/i;
 
-const mediaStyle = { display: "block", marginTop: "6px", maxWidth: "100%" };
+const mediaStyle = { display: "block", marginTop: "8px", maxWidth: "100%", borderRadius: "8px" };
 
 function splitTrailing(raw) {
   const match = raw.match(/[.,!?;:)\]]+$/);
@@ -31,14 +30,12 @@ function renderUrl(url, key) {
     return <video key={key} style={mediaStyle} src={url} controls preload="metadata" playsInline />;
   }
   return (
-    <a key={key} href={url} target="_blank" rel="noopener noreferrer"
-      style={{ color: "inherit", textDecoration: "underline", wordBreak: "break-all" }}>
+    <a key={key} href={url} target="_blank" rel="noopener noreferrer" className="msg-link">
       {url}
     </a>
   );
 }
 
-// Turns URLs in the bot's text into links or inline media (React nodes, no innerHTML).
 function renderRich(text, keyPrefix = "t") {
   const nodes = [];
   let last = 0;
@@ -54,7 +51,6 @@ function renderRich(text, keyPrefix = "t") {
   return nodes;
 }
 
-// Same line-breaking rules as the original site, rendered as React nodes (no innerHTML).
 function renderBulletText(text, rich) {
   const lines = text
     .replace(/•/g, "\n•")
@@ -77,8 +73,6 @@ function renderBulletText(text, rich) {
   });
 }
 
-const systemStyle = { borderLeft: "2px solid #4ade80", color: "#4ade80", opacity: 0.85 };
-
 export default function ChatMessage({ role, text, isSystem, isError }) {
   const isUser = role === "user";
   const rich = !isUser && !isError && !isSystem;
@@ -88,11 +82,20 @@ export default function ChatMessage({ role, text, isSystem, isError }) {
   else body = rich ? renderRich(text) : text;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: isUser ? "flex-end" : "flex-start", gap: "3px" }}>
-      <div className="msg-label">{isUser ? "you" : "llyd-bot"}</div>
-      <div className={`msg ${role}${isError ? " error" : ""}`} style={isSystem ? systemStyle : undefined}>
-        {body}
+    <div className={`msg-row ${isUser ? "user" : "bot"}`}>
+      {!isUser && (
+        <div className="msg-avatar bot-avatar">
+          <i className="fas fa-robot"></i>
+        </div>
+      )}
+      <div className={`msg-content ${isUser ? "user" : "bot"}${isError ? " error" : ""}${isSystem ? " system" : ""}`}>
+        <div className="msg-bubble">{body}</div>
       </div>
+      {isUser && (
+        <div className="msg-avatar user-avatar">
+          <i className="fas fa-user"></i>
+        </div>
+      )}
     </div>
   );
 }

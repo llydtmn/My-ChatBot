@@ -5,8 +5,15 @@ export default function ChatHeader({ onBack }) {
         <i className="fas fa-arrow-left"></i>
       </button>
       <div className="header-info">
-        <strong>Llyd-Bot</strong>
-        <span><span className="status-dot"></span>Active · Ask about Lloyd</span>
+        <div className="header-avatar">
+          <i className="fas fa-robot"></i>
+        </div>
+        <div className="header-text">
+          <strong>Llyd-Bot</strong>
+          <span>
+            <span className="status-dot"></span>Active · Ask about Lloyd
+          </span>
+        </div>
       </div>
       <div className="header-label">AI</div>
     </div>
