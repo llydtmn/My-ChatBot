@@ -11,6 +11,7 @@ import {
 } from "../services/adminService";
 import DevicesPanel from "../components/DevicesPanel";
 import SuggestionsPanel from "../components/SuggestionsPanel";
+import MonitoringPanel from "../components/MonitoringPanel";
 import "../styles/admin.css";
 
 const MAX_LENGTH = 2000;
@@ -201,7 +202,7 @@ function Dashboard({ session, error, setError }) {
       </header>
 
       <div className="admin-tabs" role="tablist" aria-label="Dashboard section">
-        {[["info", "Bot info"], ["questions", "Suggested questions"], ["devices", "Devices"]].map(([id, label]) => (
+        {[["info", "Bot info"], ["questions", "Suggested questions"], ["monitoring", "Monitoring"], ["devices", "Devices"]].map(([id, label]) => (
           <button
             key={id}
             type="button"
@@ -219,6 +220,8 @@ function Dashboard({ session, error, setError }) {
         <DevicesPanel />
       ) : view === "questions" ? (
         <SuggestionsPanel />
+      ) : view === "monitoring" ? (
+        <MonitoringPanel />
       ) : (
         <>
 

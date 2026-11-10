@@ -109,3 +109,28 @@ audio.admin-preview { width: 100%; border: 0; }
 .admin-stat strong { font-family: 'DM Serif Display', serif; font-weight: 400; font-size: 1.9rem; line-height: 1; }
 .admin-stat span { color: var(--text-dim); font-size: 11px; }
 @media (min-width: 600px) { .admin-stats { grid-template-columns: repeat(4, 1fr); } }
+
+/* ── Monitoring ─────────────────────────────────────────────────────────── */
+.mon-health { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border: 1px solid var(--border); border-left-width: 3px; border-radius: 2px; font-size: 12px; }
+.mon-health strong { font-weight: 500; }
+.mon-health span { color: var(--text-dim); font-size: 11px; }
+.mon-health.good { border-left-color: #4ade80; }
+.mon-health.warn { border-left-color: #f59e0b; }
+.mon-health.bad { border-left-color: #ef4444; }
+.mon-alert { font-size: 12px; padding: 10px 12px; border-radius: 2px; border: 1px solid var(--border); }
+.mon-alert.warn { color: #f59e0b; border-color: #4a3410; }
+.mon-alert.bad { color: #ef4444; border-color: #3f1515; }
+
+.mon-chart { display: flex; align-items: flex-end; gap: 2px; height: 120px; }
+.mon-bar { flex: 1 1 0; min-width: 2px; height: 100%; display: flex; align-items: flex-end; }
+.mon-stack { width: 100%; display: flex; flex-direction: column; min-height: 2px; }
+.mon-stack span { display: block; min-height: 0; }
+.mon-stack .ok, .mon-legend .ok { background: #4ade80; }
+.mon-stack .errors, .mon-legend .errors { background: #ef4444; }
+.mon-stack .blocked, .mon-legend .blocked { background: #f59e0b; }
+.mon-legend { font-size: 11px; color: var(--text-dim); display: inline-flex; align-items: center; gap: 6px; }
+.mon-legend i { width: 8px; height: 8px; border-radius: 1px; display: inline-block; }
+
+.mon-statuses { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; font-size: 12px; }
+.mon-statuses li { display: flex; justify-content: space-between; gap: 1rem; color: var(--text-mid); }
+.mon-statuses strong { color: var(--text); font-weight: 500; }
