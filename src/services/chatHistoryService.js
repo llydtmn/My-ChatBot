@@ -105,3 +105,23 @@ export async function updateConversationTitle(conversationId, title) {
 
   if (error) throw error;
 }
+
+// Recent conversations for the sidebar. Never throws: an empty list just hides the section.
+export async function listConversations(limit = 8) {
+  try {
+    ensureSupabase();
+    await getCurrentUser();
+
+    const { data, error } = await supabase
+      .from("conversations")
+      .select("id, title, updated_at")
+      .order("updated_at", { ascending: false })
+      .limit(limit);
+
+    if (error) throw error;
+    return data ?? [];
+  } catch (error) {
+    console.warn("Could not load recent chats:", error);
+    return [];
+  }
+}

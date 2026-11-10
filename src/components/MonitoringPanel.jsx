@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { getMonitoring, getRecentIssues } from "../services/monitoringService";
+import { getMonitoring, getRecentIssues, resetTokens } from "../services/monitoringService";
 
 // Tune these to your own limits.
 const TOKENS_PER_DAY_WARNING = 200000;
@@ -7,6 +7,9 @@ const ERROR_RATE_WARNING = 0.3; // 30% of the last hour's requests failing
 const MIN_REQUESTS_FOR_RATE = 5; // ignore the rate until there are enough requests
 const BLOCKED_PER_HOUR_WARNING = 30;
 const REFRESH_MS = 60 * 1000;
+// Token count auto-resets every 2 minutes while this dashboard is open.
+const AUTO_RESET_MS = 2 * 60 * 1000;
+const LAST_RESET_KEY = "llyd-tokens-last-reset";
 
 const RANGES = [
   { hours: 24, label: "24 hours" },
@@ -21,7 +24,7 @@ const STATUS_LABELS = {
   connection_error: "Couldn't reach AI",
   not_configured: "Not configured",
   rate_limited_burst: "Blocked: too fast",
-  rate_limited_hourly: "Blocked: hourly limit",
+  rate_limited_hourly: "Blocked: too many messages",
   invalid_request: "Invalid request",
 };
 
@@ -104,6 +107,44 @@ export default function MonitoringPanel() {
     return () => clearInterval(timer);
   }, [load]);
 
+  // Auto-reset the token count every 2 minutes (checked every 15s, survives page reloads).
+  useEffect(() => {
+    const tick = async () => {
+      let last = 0;
+      try { last = Number(localStorage.getItem(LAST_RESET_KEY)) || 0; } catch { /* ignore */ }
+      if (!last) {
+        try { localStorage.setItem(LAST_RESET_KEY, String(Date.now())); } catch { /* ignore */ }
+        return;
+      }
+      if (Date.now() - last < AUTO_RESET_MS) return;
+      try {
+        await resetTokens();
+        try { localStorage.setItem(LAST_RESET_KEY, String(Date.now())); } catch { /* ignore */ }
+        await load();
+      } catch (err) {
+        setError(err.message);
+      }
+    };
+    tick();
+    const timer = setInterval(tick, 15 * 1000);
+    return () => clearInterval(timer);
+  }, [load]);
+
+  const handleResetTokens = async () => {
+    const ok = window.confirm(
+      "Reset the token count to 0?\n\nThis clears tokens for ALL time, not just the range you are viewing. Requests, errors and visitors are kept."
+    );
+    if (!ok) return;
+    setError("");
+    try {
+      await resetTokens();
+      try { localStorage.setItem(LAST_RESET_KEY, String(Date.now())); } catch { /* ignore */ }
+      await load();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   const totals = data?.totals;
   const alerts = getAlerts(data);
   const buckets = data?.buckets ?? [];
@@ -144,9 +185,10 @@ export default function MonitoringPanel() {
         </div>
         <div className="admin-actions">
           <span className="admin-muted">
-            {updatedAt ? `Updated ${updatedAt.toLocaleTimeString()}` : ""}
+            {updatedAt ? `Updated ${updatedAt.toLocaleTimeString()} · tokens auto-reset every 2 min` : ""}
           </span>
           <button className="admin-btn" onClick={load}>Refresh</button>
+          <button className="admin-btn danger" onClick={handleResetTokens}>Reset tokens</button>
         </div>
       </div>
 

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import Icon from "./icons";
 import { SUGGESTIONS } from "../data/mockData";
 import { loadSuggestions, subscribeToSuggestions } from "../services/suggestionService";
 
@@ -65,8 +66,9 @@ export default function SuggestionBar({ visible, onSelect }) {
         aria-expanded={isOpen}
         aria-controls="suggestions-menu"
       >
+        <Icon name="sliders" size={14} />
         <span>Suggested questions</span>
-        <i className="fas fa-chevron-down" aria-hidden="true" />
+        <Icon name="chevronDown" size={14} />
       </button>
 
       {isOpen && (

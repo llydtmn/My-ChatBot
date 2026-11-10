@@ -28,3 +28,15 @@ export async function getRecentIssues(limit = 15) {
   if (error) throw friendly(error);
   return data ?? [];
 }
+
+/** Zero the token counts on every logged request. Requests, errors and visitors are kept. */
+export async function resetTokens() {
+  if (!supabase) throw new Error("Supabase is not configured. Check your .env file.");
+  const { error } = await supabase.rpc("reset_bot_tokens");
+  if (error) {
+    if (/reset_bot_tokens|schema cache|could not find the function/i.test(error.message || "")) {
+      throw new Error("Reset isn't set up yet. Run supabase_reset_tokens.sql in Supabase first.");
+    }
+    throw new Error(error.message || String(error));
+  }
+}

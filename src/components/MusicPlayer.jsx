@@ -9,7 +9,7 @@ const buttonStyle = {
 export default function MusicPlayer({ songIndex, isPlaying, onToggle }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "3px" }}>
-      <div className="msg-label">llyd-bot</div>
+      <div className="msg-label">whatTheLlyd</div>
       <div className="msg bot" style={{ padding: "10px 12px", display: "flex", alignItems: "center", gap: "10px" }}>
         <button style={buttonStyle} onClick={onToggle}>
           <i className={`fas ${isPlaying ? "fa-pause" : "fa-play"}`}></i>

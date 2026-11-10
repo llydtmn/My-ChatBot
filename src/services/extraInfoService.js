@@ -50,7 +50,7 @@ export async function getExtraInfoBlock() {
   if (!items.length) return "";
 
   return (
-    "\n\n=== ADDITIONAL INFO (added by John Lloyd) ===\n" +
+    "\n\n=== ADDITIONAL INFO (added by Lloyd) ===\n" +
     "Entries labeled Link, Photo, Video, Music or File have a URL. When a visitor asks to see, " +
     "hear or open one, put its exact URL on its own line. Copy URLs exactly. " +
     "Never invent, shorten or change a URL.\n" +

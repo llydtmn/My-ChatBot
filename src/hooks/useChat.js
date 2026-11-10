@@ -140,7 +140,7 @@ export default function useChat({ playSong }) {
 
     window.setTimeout(() => {
       if (generation !== generationRef.current) return;
-      addMessage({ text: "Sure! Here's a photo of John Lloyd 📷" });
+      addMessage({ text: "Sure! Here's a photo of Lloyd 📷" });
       addMessage({
         type: "image",
         text: image.caption || "Photo",

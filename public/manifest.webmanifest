@@ -1,7 +1,7 @@
 {
   "name": "Llyd-Bot",
   "short_name": "Llyd-Bot",
-  "description": "Personal AI companion that answers anything about John Lloyd.",
+  "description": "Personal AI companion that answers anything about Lloyd.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

@@ -12,6 +12,7 @@ import {
 import DevicesPanel from "../components/DevicesPanel";
 import SuggestionsPanel from "../components/SuggestionsPanel";
 import MonitoringPanel from "../components/MonitoringPanel";
+import Icon from "../components/icons";
 import "../styles/admin.css";
 
 const MAX_LENGTH = 2000;
@@ -26,6 +27,34 @@ const KIND_OPTIONS = [
 ];
 const KIND_LABEL = Object.fromEntries(KIND_OPTIONS.map((k) => [k.id, k.label]));
 const ACCEPT = { photo: "image/*", video: "video/*", music: "audio/*", file: undefined };
+
+const NAV = [
+  { id: "home", label: "Dashboard", icon: "grid" },
+  { id: "info", label: "Bot info", icon: "doc" },
+  { id: "questions", label: "Suggested questions", icon: "chat" },
+  { id: "monitoring", label: "Monitoring", icon: "activity" },
+  { id: "devices", label: "Devices", icon: "device" },
+];
+
+const TILES = [
+  { id: "info", icon: "doc", title: "Bot info", text: "Add the notes, links, photos and files whatTheLlyd can talk about." },
+  { id: "questions", icon: "chat", title: "Suggested questions", text: "Choose the questions visitors can tap in the chat." },
+  { id: "monitoring", icon: "activity", title: "Monitoring", text: "Watch chat traffic, errors and blocked requests." },
+  { id: "devices", icon: "device", title: "Devices", text: "See which devices opened your site and manage them." },
+];
+
+const PAGE_INTRO = {
+  info: "Everything here is sent to the bot with each chat.",
+  questions: "The questions shown in the chat's suggestion menu.",
+  monitoring: "How the chat is doing and what went wrong.",
+  devices: "Devices that have opened your site.",
+};
+
+// "john.lloyd@example.com" -> "John"
+const firstName = (email = "") => {
+  const word = email.split("@")[0].split(/[^a-zA-Z]+/).find(Boolean);
+  return word ? word[0].toUpperCase() + word.slice(1).toLowerCase() : "there";
+};
 
 const formatDate = (iso) =>
   new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
@@ -93,7 +122,7 @@ function Dashboard({ session, error, setError }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState("");
-  const [view, setView] = useState("info");
+  const [view, setView] = useState("home");
 
   // Add form
   const [kind, setKind] = useState("text");
@@ -189,32 +218,100 @@ function Dashboard({ session, error, setError }) {
     kind === "text" ? description.trim() : title.trim() && (kind === "link" ? url.trim() : file || url.trim());
 
   return (
-    <>
-      <header className="admin-header">
-        <div>
-          <h1>Llyd-Bot info</h1>
-          <p className="admin-muted">{session.user.email}</p>
+    <div className="admin-shell">
+      <aside className="admin-side">
+        <div className="admin-brand">
+          <span className="brand-orb" aria-hidden="true" />
+          <div>
+            <strong>whatTheLlyd</strong>
+            <small>Admin</small>
+          </div>
         </div>
-        <div className="admin-actions">
-          <a className="admin-btn" href="#/">View site</a>
-          <button className="admin-btn" onClick={() => signOutAdmin()}>Sign out</button>
-        </div>
-      </header>
 
-      <div className="admin-tabs" role="tablist" aria-label="Dashboard section">
-        {[["info", "Bot info"], ["questions", "Suggested questions"], ["monitoring", "Monitoring"], ["devices", "Devices"]].map(([id, label]) => (
-          <button
-            key={id}
-            type="button"
-            role="tab"
-            aria-selected={view === id}
-            className={`admin-tab${view === id ? " active" : ""}`}
-            onClick={() => setView(id)}
-          >
-            {label}
+        <nav className="admin-nav" aria-label="Dashboard sections">
+          {NAV.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              className={`admin-nav-item${view === item.id ? " active" : ""}`}
+              aria-current={view === item.id ? "page" : undefined}
+              onClick={() => setView(item.id)}
+            >
+              <Icon name={item.icon} size={17} />
+              <span>{item.label}</span>
+            </button>
+          ))}
+        </nav>
+
+        <div className="admin-side-foot">
+          <a className="admin-nav-item" href="#/" title="View site">
+            <Icon name="external" size={17} />
+            <span>View site</span>
+          </a>
+          <button type="button" className="admin-nav-item" onClick={() => signOutAdmin()} title="Sign out">
+            <Icon name="logout" size={17} />
+            <span>Sign out</span>
           </button>
-        ))}
-      </div>
+        </div>
+      </aside>
+
+      <section className="admin-main">
+        {view === "home" ? (
+          <div className="admin-home">
+            <section className="admin-welcome" aria-label="Welcome">
+              <div>
+                <h1>Welcome back, {firstName(session.user.email)}</h1>
+                <p className="admin-muted">
+                  Teach the bot new things, check how chats are going and see who is visiting.
+                </p>
+              </div>
+              <svg className="admin-welcome-art" viewBox="0 0 240 140" preserveAspectRatio="xMaxYMid slice" aria-hidden="true">
+                <defs>
+                  <linearGradient id="adminArt" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0" stopColor="#93c5fd" stopOpacity="0.95" />
+                    <stop offset="1" stopColor="#a78bfa" stopOpacity="0.55" />
+                  </linearGradient>
+                </defs>
+                <g fill="url(#adminArt)" transform="rotate(-24 120 70)">
+                  <rect x="46" y="-10" width="40" height="170" rx="20" opacity="0.55" />
+                  <rect x="104" y="-30" width="40" height="190" rx="20" opacity="0.8" />
+                  <rect x="162" y="0" width="40" height="150" rx="20" />
+                </g>
+              </svg>
+            </section>
+
+            <div className="admin-tiles">
+              {TILES.map((tile) => (
+                <button key={tile.id} type="button" className="admin-tile" onClick={() => setView(tile.id)}>
+                  <Icon name={tile.icon} size={22} />
+                  <strong>{tile.title}</strong>
+                  <span>{tile.text}</span>
+                  {tile.id === "info" && !loading && (
+                    <em>{items.length} {items.length === 1 ? "entry" : "entries"}</em>
+                  )}
+                </button>
+              ))}
+              <a className="admin-tile" href="#/">
+                <Icon name="external" size={22} />
+                <strong>View site</strong>
+                <span>Open the public chat the way visitors see it.</span>
+              </a>
+              <button type="button" className="admin-tile" onClick={() => signOutAdmin()}>
+                <Icon name="logout" size={22} />
+                <strong>Sign out</strong>
+                <span>Leave the dashboard on this device ({session.user.email}).</span>
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="admin-sub">
+            <header className="admin-pagehead">
+              <h1>{NAV.find((n) => n.id === view).label}</h1>
+              <p className="admin-muted">{PAGE_INTRO[view]}</p>
+            </header>
+
+            {error && <p className="admin-error" role="alert">{error}</p>}
+            {notice && <p className="admin-notice" role="status">{notice}</p>}
 
       {view === "devices" ? (
         <DevicesPanel />
@@ -301,9 +398,6 @@ function Dashboard({ session, error, setError }) {
         </div>
       </form>
 
-      {error && <p className="admin-error" role="alert">{error}</p>}
-      {notice && <p className="admin-notice" role="status">{notice}</p>}
-
       <section aria-label="Saved entries">
         <div className="admin-row admin-list-head">
           <h2>Saved entries ({items.length})</h2>
@@ -375,7 +469,10 @@ function Dashboard({ session, error, setError }) {
       </section>
         </>
       )}
-    </>
+          </div>
+        )}
+      </section>
+    </div>
   );
 }
 
@@ -400,16 +497,18 @@ export default function AdminPage() {
   }, []);
 
   return (
-    <main className="admin-page">
-      <div className="admin-wrap">
-        {checking ? (
+    <main className={`admin-page${session ? " admin-page--shell" : ""}`}>
+      {checking ? (
+        <div className="admin-wrap">
           <p className="admin-muted">Loading…</p>
-        ) : session ? (
-          <Dashboard session={session} error={error} setError={setError} />
-        ) : (
+        </div>
+      ) : session ? (
+        <Dashboard session={session} error={error} setError={setError} />
+      ) : (
+        <div className="admin-wrap">
           <LoginForm error={error} onError={setError} />
-        )}
-      </div>
+        </div>
+      )}
     </main>
   );
 }

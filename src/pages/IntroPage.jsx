@@ -1,47 +1,68 @@
-import { useRef } from "react";
+import { useEffect } from "react";
+import Icon from "../components/icons";
+import useSecretAdminTap from "../hooks/useSecretAdminTap";
 
-// Hidden shortcut to the admin dashboard: tap "Llyd-Bot" 5 times in a row,
-// with no more than 2 seconds between taps. Nothing about it is visible.
-const SECRET_TAPS = 5;
-const MAX_GAP_MS = 2000;
+const TOPICS = [
+  { icon: "about", label: "Skills & experience" },
+  { icon: "media", label: "Photos & music" },
+  { icon: "contact", label: "How to reach him" },
+];
 
-const secretStyle = {
-  userSelect: "none",
-  WebkitUserSelect: "none",
-  WebkitTapHighlightColor: "transparent",
-  touchAction: "manipulation",
-};
-
+// Full-screen welcome. Entering the chat is one-way: once `hidden`, the only
+// way back here is to reload the page.
 export default function IntroPage({ hidden, onEnter }) {
-  const taps = useRef({ count: 0, last: 0 });
+  const handleSecretTap = useSecretAdminTap();
 
-  const handleSecretTap = () => {
-    const now = Date.now();
-    const t = taps.current;
-    t.count = now - t.last > MAX_GAP_MS ? 1 : t.count + 1;
-    t.last = now;
-
-    if (t.count >= SECRET_TAPS) {
-      t.count = 0;
-      window.location.hash = "#/admin";
-    }
-  };
+  // Enter works from anywhere on this screen.
+  useEffect(() => {
+    if (hidden) return;
+    const onKey = (e) => {
+      if (e.key === "Enter") onEnter();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [hidden, onEnter]);
 
   return (
-    <div id="intro-screen" className={hidden ? "hidden" : ""}>
-      <div className="intro-grain"></div>
+    <div id="intro-screen" className={hidden ? "hidden" : ""} aria-hidden={hidden}>
+      <div className="intro-grain" />
+
       <div className="intro-content">
-        <div className="intro-badge">Personal AI Companion</div>
-        <h1 className="intro-name">Lloyd<br /><em>Bot</em></h1>
-        <div className="intro-divider"></div>
+        <div className="intro-orb" aria-hidden="true">
+          <span className="intro-ring" />
+          <span className="intro-core" />
+        </div>
+
+        <p className="intro-badge">Personal AI companion</p>
+
+        <h1 className="intro-name">
+          whatThe<em>Llyd</em>
+        </h1>
+
         <p className="intro-desc">
-          Meet <strong onClick={handleSecretTap} style={secretStyle}>Llyd-Bot</strong> — an intelligent assistant built to answer anything about John Lloyd. His skills, experience, personality, and how to reach him. All in one conversation.
+          Meet{" "}
+          <strong onClick={handleSecretTap} className="intro-secret">
+            whatTheLlyd
+          </strong>
+          , an assistant built to answer anything about Lloyd, in one conversation.
         </p>
+
+        <ul className="intro-topics" aria-label="What you can ask about">
+          {TOPICS.map((t) => (
+            <li key={t.label}>
+              <Icon name={t.icon} size={15} />
+              <span>{t.label}</span>
+            </li>
+          ))}
+        </ul>
+
         <button className="intro-enter-btn" onClick={onEnter}>
-          <i className="fas fa-arrow-right"></i>
+          <span>Start chatting</span>
+          <Icon name="arrowRight" size={16} />
         </button>
       </div>
-      <div className="intro-footer">lloyd.design &nbsp;·&nbsp; bsit student &nbsp;·&nbsp; open to work</div>
+
+      <p className="intro-footer">lloyd.design · bsit student · open to work</p>
     </div>
   );
 }
